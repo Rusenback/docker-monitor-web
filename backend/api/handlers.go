@@ -1,8 +1,8 @@
 package api
 
 import (
-	"github.com/rusenback/docker-monitor-web/services"
 	"github.com/gin-gonic/gin"
+	"github.com/rusenback/docker-monitor-web/services"
 )
 
 type Handler struct {
@@ -31,3 +31,4 @@ func (h *Handler) GetContainerStats(c *gin.Context) {
 	}
 	c.JSON(200, container_stats)
 }
+
