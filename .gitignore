@@ -1,0 +1,96 @@
+#######################
+# Go
+#######################
+
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go build artifacts
+/bin/
+/dist/
+/build/
+
+# Go test / coverage
+*.test
+*.out
+coverage.*
+profile.out
+
+# Go workspace
+go.work
+go.work.sum
+
+#######################
+# TypeScript / Node / Bun
+#######################
+
+# Dependencies
+node_modules/
+bun.lockb
+pnpm-lock.yaml
+yarn.lock
+
+# Build output
+dist/
+build/
+out/
+
+# TS cache
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bun-debug.log*
+
+#######################
+# Environment & secrets
+#######################
+
+.env
+.env.*
+!.env.example
+
+#######################
+# OS / Editor junk
+#######################
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+
+# JetBrains
+.idea/
+*.iml
+
+#######################
+# Docker
+#######################
+
+# Docker local overrides
+docker-compose.override.yml
+
+#######################
+# Misc
+#######################
+
+# Temporary files
+tmp/
+temp/
+
