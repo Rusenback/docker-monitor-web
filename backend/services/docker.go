@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
+	"runtime"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -23,6 +25,7 @@ type statsJSON struct {
             PercpuUsage []uint64 `json:"percpu_usage"`
         } `json:"cpu_usage"`
         SystemCPUUsage uint64 `json:"system_cpu_usage"`
+        OnlineCPUs uint64     `json:"online_cpus"`
     } `json:"cpu_stats"`
     
     PreCPUStats struct {
@@ -102,7 +105,19 @@ func (s *DockerService) GetContainerStats(ctx context.Context, containerID strin
 
 	systemDelta := statsJSON.CPUStats.SystemCPUUsage - statsJSON.PreCPUStats.SystemCPUUsage
 
-	numCPUs := len(statsJSON.CPUStats.CPUUsage.PercpuUsage)
+  numCPUs := int(statsJSON.CPUStats.OnlineCPUs)
+	if numCPUs == 0 {
+		numCPUs = len(statsJSON.CPUStats.CPUUsage.PercpuUsage)
+	}
+	if numCPUs == 0 {
+		numCPUs = runtime.NumCPU()
+	}
+	// After calculating deltas, add this:
+  log.Printf("Container %s:", containerID[:12])
+  log.Printf("  cpuDelta: %d", cpuDelta)
+  log.Printf("  systemDelta: %d", systemDelta)
+  log.Printf("  numCPUs: %d", numCPUs)
+
 
 	var cpuPercent float64 = 0.0
 
@@ -113,6 +128,8 @@ func (s *DockerService) GetContainerStats(ctx context.Context, containerID strin
 	if cpuPercent > 100.0 * float64(numCPUs){
 		cpuPercent = 100.0 * float64(numCPUs)
 	}
+
+  log.Printf("  Calculated CPU: %.2f%%", cpuPercent)
 	
 	memoryUsage := statsJSON.MemoryStats.Usage 
 	memoryLimit := statsJSON.MemoryStats.Limit 
@@ -131,5 +148,40 @@ func (s *DockerService) GetContainerStats(ctx context.Context, containerID strin
 	}
 
 	return result, nil
+}
 
+func (s *DockerService) BroadcastStats(ctx context.Context, hub *Hub, interval time.Duration){
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <- ticker.C:
+			containers, err := s.ListContainers(ctx)
+			if err != nil {
+				log.Printf("Error listing containers: %v", err)
+				continue
+			}
+		
+		var allStats []models.ContainerStats
+		for _, container := range containers{
+				stats, err := s.GetContainerStats(ctx, container.ID)
+				if err != nil {
+					continue
+			}
+		allStats = append(allStats, *stats)
+		}
+
+		data, err := json.Marshal(allStats)
+		if err != nil {
+				log.Printf("Error marshalin stats: %v", err)
+				continue
+			}
+		
+		hub.broadcast <- data
+		
+		case <- ctx.Done():
+			return
+		}
+	}
 }
