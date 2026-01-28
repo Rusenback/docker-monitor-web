@@ -29,7 +29,26 @@ func main() {
 
 	router := gin.Default()
 
-	handler := api.NewHandler(dockerService)
+	tsdb, err := services.NewTimeSeriesDB(
+    cfg.DBHost,
+    cfg.DBPort,
+    cfg.DBUser,
+    cfg.DBPassword,
+    cfg.DBName,
+	)
+	if err != nil {
+    log.Printf("Warning: Could not connect to database: %v", err)
+    log.Println("Continuing without database persistence...")
+    tsdb = nil
+	} else {
+    // Only defer close if connection succeeded
+    defer tsdb.Close()
+	}
+
+	handler := api.NewHandler(dockerService, tsdb)
+	log.Printf("DEBUG: Created handler with tsdb=%v", tsdb != nil)  // Add this
+
+
 
 	router.Use(cors.New(cors.Config{
 			AllowOrigins: 		[]string{cfg.FrontendURL},
@@ -42,7 +61,7 @@ func main() {
 	port := cfg.Port
 
 	ctx := context.Background()
-	go dockerService.BroadcastStats(ctx, hub, 2*time.Second)
+	go dockerService.BroadcastStats(ctx, hub, tsdb , 2*time.Second)
 
 
 	router.GET("ping", func(c *gin.Context) {
@@ -58,6 +77,8 @@ func main() {
 	router.GET("/ws", func(c *gin.Context) {
 		services.ServeWs(hub, c.Writer, c.Request)
 	})
+
+	router.GET("/api/containers/:id/history", handler.GetContainerHistory)
 
 	log.Println("Docker service initialized succesfully!")
 	

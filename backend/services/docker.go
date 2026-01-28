@@ -112,12 +112,6 @@ func (s *DockerService) GetContainerStats(ctx context.Context, containerID strin
 	if numCPUs == 0 {
 		numCPUs = runtime.NumCPU()
 	}
-	// After calculating deltas, add this:
-  log.Printf("Container %s:", containerID[:12])
-  log.Printf("  cpuDelta: %d", cpuDelta)
-  log.Printf("  systemDelta: %d", systemDelta)
-  log.Printf("  numCPUs: %d", numCPUs)
-
 
 	var cpuPercent float64 = 0.0
 
@@ -129,8 +123,6 @@ func (s *DockerService) GetContainerStats(ctx context.Context, containerID strin
 		cpuPercent = 100.0 * float64(numCPUs)
 	}
 
-  log.Printf("  Calculated CPU: %.2f%%", cpuPercent)
-	
 	memoryUsage := statsJSON.MemoryStats.Usage 
 	memoryLimit := statsJSON.MemoryStats.Limit 
 
@@ -150,7 +142,7 @@ func (s *DockerService) GetContainerStats(ctx context.Context, containerID strin
 	return result, nil
 }
 
-func (s *DockerService) BroadcastStats(ctx context.Context, hub *Hub, interval time.Duration){
+func (s *DockerService) BroadcastStats(ctx context.Context, hub *Hub, tsdb *TimeSeriesDB, interval time.Duration){
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 
@@ -163,22 +155,29 @@ func (s *DockerService) BroadcastStats(ctx context.Context, hub *Hub, interval t
 				continue
 			}
 		
-		var allStats []models.ContainerStats
-		for _, container := range containers{
+			var allStats []models.ContainerStats
+			for _, container := range containers{
 				stats, err := s.GetContainerStats(ctx, container.ID)
 				if err != nil {
 					continue
 			}
-		allStats = append(allStats, *stats)
+			allStats = append(allStats, *stats)
 		}
+			for _, stat := range allStats {
+    if tsdb != nil {
+        if err := tsdb.InsertMetrics(stat); err != nil {
+            log.Printf("Failed to save metrics: %v", err)
+        }
+    }
+}
 
-		data, err := json.Marshal(allStats)
-		if err != nil {
+					data, err := json.Marshal(allStats)
+			if err != nil {
 				log.Printf("Error marshalin stats: %v", err)
 				continue
 			}
 		
-		hub.broadcast <- data
+			hub.broadcast <- data
 		
 		case <- ctx.Done():
 			return

@@ -1,5 +1,5 @@
 import  { useEffect, useState } from 'react';
-import type { Container, ContainerStats, ContainerWithStats } from '../types/container';
+import type { Container, ContainerStats } from '../types/container';
 import {GetContainer } from '../api/client'
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws.//localhost:8080/ws';
