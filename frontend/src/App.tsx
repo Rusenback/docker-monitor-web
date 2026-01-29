@@ -2,7 +2,7 @@ import { useWebSocket } from './hooks/useWebSocket';
 import { ContainerCard } from './components/ContainerCard';
 
 function App() {
-  const { stats, connected } = useWebSocket();
+  const { stats, connected, history } = useWebSocket();
 
   return (
     <div className="min-h-screen bg-dracula-background">
@@ -63,7 +63,7 @@ function App() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {stats.map((stat) => (
-              <ContainerCard key={stat.container_id} stats={stat} />
+              <ContainerCard key={stat.container_id} stats={stat} history={history[stat.container_id]}/>
             ))}
           </div>
         )}

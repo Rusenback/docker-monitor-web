@@ -4,10 +4,17 @@ import {GetContainer } from '../api/client'
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws.//localhost:8080/ws';
 
+interface HistoricalData {
+  timestamp: number;
+  cpu_percent: number;
+  memory_percent: number;
+}
+
 export const useWebSocket = () => {
   const [stats, setStats] = useState<ContainerStats[]>([]);
   const [connected, setConnected] = useState(false);
   const [containers, setContainers] = useState<Container[]>([]);
+  const [history, setHistory] = useState<Record<string, HistoricalData[]>>({});
 
   useEffect(() => {
     const fetchContainers = async () => {
@@ -36,6 +43,7 @@ export const useWebSocket = () => {
     ws.onmessage = (event) => {
       try {
         const statsData = JSON.parse(event.data) as ContainerStats[];
+        const timestamp = Date.now();
 
         const mergeData: ContainerStats[] = statsData.map(stat => {
           const container = containers.find(c => c.id.startsWith(stat.container_id.slice(0, 12)));
@@ -49,6 +57,24 @@ export const useWebSocket = () => {
         });
 
         setStats(mergeData);
+
+        setHistory(prev => {
+        const newHistory = {...prev};
+
+          statsData.forEach(stat => {
+            const id = stat.container_id;
+            const dataPoint: HistoricalData = {
+              timestamp: timestamp,
+              cpu_percent: stat.cpu_percent,
+              memory_percent: stat.memory_percent,
+            };
+
+            const containerHistory = [...(newHistory[id] || []), dataPoint].slice(-30);
+            newHistory[id] = containerHistory;
+            
+          });
+          return newHistory;
+        });
       } catch (error) {
         console.error('failed to parse WebSocket message:', error);
       }
@@ -64,5 +90,5 @@ export const useWebSocket = () => {
     };
   }, [containers]);
 
-  return {stats, connected};
+  return {stats, connected, history};
 };
