@@ -1,6 +1,6 @@
 # 🐳 Docker Monitor
 
-Production-ready real-time Docker container monitoring system with historical analytics.
+Homelab ready real-time Docker container monitoring system with historical analytics.
 
 ![Dashboard](./screenshots/dashboard.png)
 
