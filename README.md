@@ -71,9 +71,6 @@ flowchart LR
     style DOCKER_SOCK fill:#ff79c6
 ```
 
-
-[Lisää kaavio]
-
 ## 🚀 Quick Start
 ```bash
 git clone https://github.com/username/docker-monitor
