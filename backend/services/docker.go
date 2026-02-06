@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"runtime"
 	"strings"
 	"time"
-	"runtime"
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -59,15 +60,15 @@ func (s DockerService) Close() error{
 }
 
 func (s DockerService) ListContainers(ctx context.Context) ([]models.ContainerInfo, error){
-	container_list, err := s.client.ContainerList(ctx, container.ListOptions{})
+	containerList, err := s.client.ContainerList(ctx, container.ListOptions{})
 	if err != nil {
 		log.Printf("Failed to list containers: %v", err)
 		return nil, err
 	}
 	
-	result := make([]models.ContainerInfo, 0, len(container_list))
+	result := make([]models.ContainerInfo, 0, len(containerList))
 	
-	for _, c := range container_list{
+	for _, c := range containerList{
 
 		name := ""
 		if len(c.Names) > 0 {
@@ -113,7 +114,7 @@ func (s *DockerService) GetContainerStats(ctx context.Context, containerID strin
 		numCPUs = runtime.NumCPU()
 	}
 
-	var cpuPercent float64 = 0.0
+	var cpuPercent = 0.0
 
 	if systemDelta > 0 && cpuDelta > 0 {
 		cpuPercent = (float64(cpuDelta) / float64(systemDelta) * float64(numCPUs) * 100)
@@ -126,7 +127,7 @@ func (s *DockerService) GetContainerStats(ctx context.Context, containerID strin
 	memoryUsage := statsJSON.MemoryStats.Usage 
 	memoryLimit := statsJSON.MemoryStats.Limit 
 
-	var memoryPercent float64 = 0.0 
+	var memoryPercent = 0.0 
 		if memoryLimit > 0 {
 		memoryPercent = (float64(memoryUsage) / float64(memoryLimit)) * 100.0
 	}
@@ -183,4 +184,21 @@ func (s *DockerService) BroadcastStats(ctx context.Context, hub *Hub, tsdb *Time
 			return
 		}
 	}
+}
+
+func (s *DockerService) StreamLogs(ctx context.Context, containerID string, lines int) (io.ReadCloser, error) {
+	options := container.LogsOptions{
+		ShowStdout: true,
+		ShowStderr: true,
+		Follow:			false,
+		Tail: 			fmt.Sprintf("%d", lines),
+		Timestamps: true,
+	}
+
+	logs, err := s.client.ContainerLogs(ctx, containerID, options)
+	if err != nil {
+		return nil, err
+	}
+
+	return logs, nil
 }

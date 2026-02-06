@@ -1,8 +1,12 @@
 package api
 
 import (
+	"bytes"
 	"log"
+	"strconv"
+
 	"github.com/gin-gonic/gin"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/rusenback/docker-monitor-web/services"
 )
 
@@ -29,12 +33,12 @@ func (h *Handler) GetContainers(c *gin.Context) {
 
 func (h *Handler) GetContainerStats(c *gin.Context) {
 	containerID := c.Param("id")
-	container_stats, err := h.dockerService.GetContainerStats(c.Request.Context(), containerID)
+	containerStats, err := h.dockerService.GetContainerStats(c.Request.Context(), containerID)
 	if err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(200, container_stats)
+	c.JSON(200, containerStats)
 }
 
 func (h *Handler) GetContainerHistory(c *gin.Context) {
@@ -55,4 +59,33 @@ func (h *Handler) GetContainerHistory(c *gin.Context) {
     }
     
     c.JSON(200, history)
+}
+
+func (h *Handler) GetContainerLogs(c *gin.Context) {
+	containerID := c.Param("id")
+	lines := c.DefaultQuery("lines", "100")
+
+	linesInt, err := strconv.Atoi(lines)
+	if err != nil {
+		linesInt = 100
+	}
+
+	logs, err := h.dockerService.StreamLogs(c.Request.Context(), containerID, linesInt)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	defer logs.Close()
+
+	buf := new(bytes.Buffer)
+	_, err = stdcopy.StdCopy(buf, buf, logs)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return 
+	}
+
+	c.JSON(200, gin.H{
+		"logs": buf.String(),
+	})
 }

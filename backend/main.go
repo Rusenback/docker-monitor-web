@@ -80,6 +80,8 @@ func main() {
 
 	router.GET("/api/containers/:id/history", handler.GetContainerHistory)
 
+	router.GET("/api/containers/:id/logs", handler.GetContainerLogs)
+
 	log.Println("Docker service initialized succesfully!")
 	
 	fmt.Println("http://localhost:" + port)
