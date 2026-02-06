@@ -16,10 +16,10 @@ Homelab ready real-time Docker container monitoring system with historical analy
 
 ## 📋 TODO 
 
-- [] Live log streaming 
-- [] Container control buttons (start/stop/restart)
-- [] Alert system for high resource usage 
-- [] Search and filer containers
+- [ ] Live log streaming 
+- [ ] Container control buttons (start/stop/restart)
+- [ ] Alert system for high resource usage 
+- [ ] Search and filer containers
 
 ## 🏗️ Architecture
 ```mermaid
