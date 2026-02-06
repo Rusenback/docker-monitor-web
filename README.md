@@ -90,6 +90,27 @@ Access at http://localhost:3000
 ## 🛠️ Tech Stack
 
 **Backend:**
+- Go 1.23
+- Gin web framework
+- Docker SDK
+- WebSockets
+- PostgreSQL driver
+
+**Frontend:**
+- React 18
+- TypeScript
+- Bun
+- Recharts
+- Tailwind CSS
+
+**Database:**
+- TimescaleDB (PostgreSQL + time-series)
+
+**Infrastructure:**
+- Docker & Docker Compose
+- Multi-stage builds
+- Non-root containers
+- Alpine Linux base
 
 ## 🔐 Security Features
 
