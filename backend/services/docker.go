@@ -120,7 +120,7 @@ func (s *DockerService) GetContainerStats(ctx context.Context, containerID strin
 	}
 
 	if cpuPercent > 100.0 * float64(numCPUs){
-		cpuPercent = 100.0 * float64(numCPUs)
+		cpuPercent = 100.0
 	}
 
 	memoryUsage := statsJSON.MemoryStats.Usage 
