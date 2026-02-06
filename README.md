@@ -123,31 +123,4 @@ Access at http://localhost:3000
 ## 📝 License
 
 MIT- Go 1.23
-- Gin web framework
-- Docker SDK
-- WebSockets
-- PostgreSQL driver
-
-**Frontend:**
-- React 18
-- TypeScript
-- Bun
-- Recharts
-- Tailwind CSS
-
-**Database:**
-- TimescaleDB (PostgreSQL + time-series)
-
-**Infrastructure:**
-- Docker & Docker Compose
-- Multi-stage builds
-- Non-root containers
-- Alpine Linux base
-
-## 📊 Performance
-
-- Backend image: ~25 MB
-- Frontend image: ~40 MB
-- CPU usage: <1%
-- Memory: ~50 MB total
 
