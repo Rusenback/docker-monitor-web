@@ -1,28 +1,46 @@
-FROM oven/bun:1 AS builder
+# Build stage
+FROM oven/bun:1-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
 COPY package.json bun.lock ./
-
-# Install dependencies
 RUN bun install --frozen-lockfile
 
-# Copy source
 COPY . .
-
-# Build for production
 RUN bun run build
 
-# Production stage with nginx
+# Runtime stage
 FROM nginx:alpine
 
-# Copy built files
+# Poista default nginx config
+RUN rm /etc/nginx/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Kopioi custom nginx config
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Kopioi built files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Luo tarvittavat hakemistot ja anna oikeudet
+RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /var/cache/nginx && \
+    chown -R nginx:nginx /var/log/nginx && \
+    chown -R nginx:nginx /etc/nginx && \
+    touch /var/run/nginx.pid && \
+    chown -R nginx:nginx /var/run/nginx.pid && \
+    # Luo cache-hakemistot
+    mkdir -p /var/cache/nginx/client_temp && \
+    mkdir -p /var/cache/nginx/proxy_temp && \
+    mkdir -p /var/cache/nginx/fastcgi_temp && \
+    mkdir -p /var/cache/nginx/uwsgi_temp && \
+    mkdir -p /var/cache/nginx/scgi_temp && \
+    chown -R nginx:nginx /var/cache/nginx
 
-EXPOSE 80
+USER nginx
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
