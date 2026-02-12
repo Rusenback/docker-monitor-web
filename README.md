@@ -73,7 +73,7 @@ flowchart LR
 
 ## 🚀 Quick Start
 ```bash
-git clone https://github.com/username/docker-monitor
+git clone https://github.com/rusenback/docker-monitor-web
 cd docker-monitor
 docker compose up -d
 ```
